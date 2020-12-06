@@ -8,4 +8,5 @@ members = [
     "io",
     "mini-tokio",
     "streams",
+    "codecs"
 ]
