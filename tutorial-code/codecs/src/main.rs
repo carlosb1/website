@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::io;
 use std::net::SocketAddr;
+use std::{thread, time};
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
@@ -132,9 +133,19 @@ pub async fn send(address: &str, mesg: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Starting server...");
+fn main() -> () {
     let rt = Runtime::new().unwrap();
     let server = Server {};
-    rt.block_on(server.run("127.0.0.1:12345"))
+    rt.block_on(async {
+        println!("Starting server...");
+        server
+            .run("127.0.0.1:12345")
+            .await
+            .expect("Error running server");
+        thread::sleep(time::Duration::from_millis(500));
+        println!("Sending message to the server");
+        send("127.0.0.1:12345", "Hello my friend")
+            .await
+            .expect("Error sending message");
+    });
 }
