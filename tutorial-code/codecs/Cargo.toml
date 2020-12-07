@@ -9,5 +9,6 @@ publish = false
 
 [dependencies]
 bytes = "0.6"
-tokio = { version = "0.3", features = ["net"] }
+futures = "0.3"
+tokio = { version = "0.3", features = ["full"] }
 tokio-util = { version = "0.5.1", features = ["codec"] }
