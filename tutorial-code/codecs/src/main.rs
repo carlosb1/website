@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::io;
 use std::net::SocketAddr;
-use std::{thread, time};
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
@@ -74,8 +73,9 @@ impl Server {
         let addr = address.parse::<SocketAddr>()?;
 
         let listener = TcpListener::bind(&addr).await?;
-        let (mut socket, _) = listener.accept().await?;
         loop {
+            println!("Server: listening connection");
+            let (mut socket, _) = listener.accept().await?;
             let (r, w) = socket.split();
             let mut framed_writer = FramedWrite::new(w, MyBytesCodec {});
             let mut framed_reader = FramedRead::new(r, MyBytesCodec {});
@@ -138,14 +138,6 @@ fn main() -> () {
     let server = Server {};
     rt.block_on(async {
         println!("Starting server...");
-        server
-            .run("127.0.0.1:12345")
-            .await
-            .expect("Error running server");
-        thread::sleep(time::Duration::from_millis(500));
-        println!("Sending message to the server");
-        send("127.0.0.1:12345", "Hello my friend")
-            .await
-            .expect("Error sending message");
+        server.run("127.0.0.1:12345").await.unwrap();
     });
 }
