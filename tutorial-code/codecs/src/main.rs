@@ -11,11 +11,14 @@ use tokio::runtime::Runtime;
 use tokio_util::codec::{Decoder, Encoder};
 use tokio_util::codec::{FramedRead, FramedWrite};
 
+/// JSON serialized message.
 #[derive(Serialize, Deserialize)]
 pub struct Message {
     text: String,
 }
+
 impl Message {
+    /// Static factory for response messages.
     fn new_ok() -> Message {
         Message {
             text: "ok".to_string(),
@@ -23,12 +26,14 @@ impl Message {
     }
 }
 
+/// Class for encoding and decoding messages.
 pub struct MyBytesCodec;
 
 impl Decoder for MyBytesCodec {
     type Item = Message;
     type Error = io::Error;
 
+    /// Decode messages from buf to a Message type
     fn decode(&mut self, buf: &mut BytesMut) -> io::Result<Option<Self::Item>> {
         if buf.len() == 0 {
             return Ok(None);
@@ -51,6 +56,7 @@ impl Decoder for MyBytesCodec {
 impl Encoder<Message> for MyBytesCodec {
     type Error = io::Error;
 
+    /// Encode a Message type and append in a BytesMut buffer.
     fn encode(&mut self, data: Message, buf: &mut BytesMut) -> io::Result<()> {
         //It can be used to_vec for a direct parser.
         if let Ok(vec_data) = serde_json::to_string(&data) {
@@ -65,9 +71,11 @@ impl Encoder<Message> for MyBytesCodec {
     }
 }
 
+/// Server example to listen messages and response
 pub struct Server;
 
 impl Server {
+    /// Main function for listening new messages and reply.
     pub async fn run(self, address: &str) -> Result<(), Box<dyn Error>> {
         println!("Server: Starting to listen {}", address);
         let addr = address.parse::<SocketAddr>()?;
@@ -77,6 +85,7 @@ impl Server {
             println!("Server: listening connection");
             let (mut socket, _) = listener.accept().await?;
             let (r, w) = socket.split();
+            // Set up frameds to read and write messages.
             let mut framed_writer = FramedWrite::new(w, MyBytesCodec {});
             let mut framed_reader = FramedRead::new(r, MyBytesCodec {});
             if let Some(frame) = framed_reader.next().await {
@@ -101,6 +110,7 @@ impl Server {
     }
 }
 
+/// Function to send messages and wait response.
 pub async fn send(address: &str, mesg: &str) -> Result<(), Box<dyn Error>> {
     let addr = address.parse::<SocketAddr>()?;
     let mut tcp = TcpStream::connect(&addr).await?;
