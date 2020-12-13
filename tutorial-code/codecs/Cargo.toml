@@ -14,7 +14,7 @@ serde_json= "1.0"
 bytes = "0.6"
 futures = "0.3"
 tokio = { version = "0.3", features = ["full"] }
-tokio-util = { version = "0.5.1", features = ["codec"] }
+tokio-util = { version = "0.5.1", features = ["codec", "io"] }
 
 [[bin]]
 name="client"

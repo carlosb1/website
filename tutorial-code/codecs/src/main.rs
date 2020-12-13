@@ -1,16 +1,17 @@
 use bytes::BytesMut;
 use futures::sink::SinkExt;
-use futures::StreamExt;
+//use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::io;
 use std::net::SocketAddr;
+use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
+use tokio::stream::StreamExt;
 use tokio_util::codec::{Decoder, Encoder};
 use tokio_util::codec::{FramedRead, FramedWrite};
-
 /// JSON serialized message.
 #[derive(Serialize, Deserialize)]
 pub struct Message {
@@ -143,7 +144,37 @@ pub async fn send(address: &str, mesg: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/// Example about how to parse message via stream reader
+fn read_with_stream_reader() {
+    use bytes::Bytes;
+    use tokio_util::io::StreamReader;
+    let stream = tokio::stream::iter(vec![tokio::io::Result::Ok(Bytes::from(
+        "{\"text\":\"hello world\"}",
+    ))]);
+    let framed_stream = StreamReader::new(stream);
+    let mut framed_reader = FramedRead::new(framed_stream, MyBytesCodec {});
+
+    let rt = Runtime::new().unwrap();
+    rt.block_on(async {
+        if let Some(frame) = framed_reader.next().await {
+            match frame {
+                Ok(response) => {
+                    let str_msg = serde_json::to_string(&response)
+                        .expect("This message was decoded but now it can be parser to string.");
+                    println!("Sender: it is a response  message {}", str_msg);
+                }
+                Err(e) => {
+                    println!("Sender: Error reading response  {}?", e);
+                }
+            }
+        } else {
+            println!("Sender: It was not possible to receive responses.");
+        }
+    });
+}
+
 fn main() -> () {
+    read_with_stream_reader();
     let rt = Runtime::new().unwrap();
     let server = Server {};
     rt.block_on(async {
