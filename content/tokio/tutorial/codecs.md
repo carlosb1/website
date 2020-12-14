@@ -14,6 +14,8 @@ For the example, it is needed:
 
 # Serializable message
 
+To serialize objects, in our case, we will use `serde` and `serde-json` to create a message. It permits an easy debugging.
+ 
 ```rust
 use serde::{Deserialize, Serialize};
 
@@ -33,7 +35,14 @@ impl Message {
 }
 ```
 
+Now, we will implement the necessary traits to process and stream messages. For this, we need our `decoder` and `encoder`
+
 # Encoder and decoder
+
+
+The Decoder will reponsible to translate a set of bytes as `BytesMut` in a Serialized messages. It controls different situation
+like a not correct decoding. 
+
 ```rust
 /// Class for encoding and decoding messages.
 pub struct MyBytesCodec;
@@ -62,6 +71,11 @@ impl Decoder for MyBytesCodec {
     }
 }
 ```
+
+
+For encoding, it is similar but it is used the `Encoder` trait. In this case, It parses a type `Message` to a buffer type `BytesMut`.
+
+
 ```rust
 impl Encoder<Message> for MyBytesCodec {
     type Error = io::Error;
@@ -82,6 +96,9 @@ impl Encoder<Message> for MyBytesCodec {
 }
 ```
 # FramedWrite and FramedRead
+
+To operate with this encoders/decoders it can be used with framed that it will permit an easy way to write and read messages
+
 ```rust
         let mut framed_writer = FramedWrite::new(w, MyBytesCodec {});
         let mut framed_reader = FramedRead::new(r, MyBytesCodec {});
@@ -89,6 +106,8 @@ impl Encoder<Message> for MyBytesCodec {
 
 
 # Server example
+
+Here, it is an example about how it could be a server that reads and writes messages.
 
 ```rust
 /// Server example to listen messages and response
@@ -130,3 +149,5 @@ impl Server {
     }
 }
 ```
+
+
