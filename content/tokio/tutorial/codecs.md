@@ -226,7 +226,7 @@ fn main() -> () {
 
 In our example server, it is used the `TCPListener` to stream data but also `StreamReader` or `ReaderStream` can do this, they permit stream data in an easy way.
 
-In this example, we are decoding messages that they come from `StreamReader`.
+In this example, we are decoding messages that come from `StreamReader`.
 
 
 ```rust
